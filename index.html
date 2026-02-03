@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>北海道方言 意味一致タイピング</title>
+
+<style>
+body {
+  font-family: Meiryo, "Hiragino Kaku Gothic ProN", sans-serif;
+  background: #f4f6f8;
+  padding: 30px;
+}
+
+.card {
+  max-width: 800px;
+  margin: auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+}
+
+.progress {
+  text-align: center;
+  margin-bottom: 15px;
+  font-weight: bold;
+  color: #555;
+}
+
+.standard {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.choices p {
+  background: #eef1f4;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 17px;
+  margin-top: 15px;
+}
+
+.result {
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.correct {
+  color: #2e7d32;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px 25px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  background: #4CAF50;
+  color: #fff;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="card">
+  <h1>北海道方言 意味一致タイピング</h1>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="standard" id="standard"></div>
+
+  <div class="choices" id="choices"></div>
+
+  <input
+    type="text"
+    id="answer"
+    placeholder="正しい文章をそのまま入力してEnter"
+  >
+
+  <div class="result" id="result"></div>
+
+  <button id="retry" style="display:none;">もう一度挑戦</button>
+</div>
+
+<script>
+const problems = [
+  {
+    standard: "今日はとても寒いね。",
+    correct: "今日はなまらしばれるね。",
+    wrong: [
+      "今日はしたっけあずましいね。",
+      "今日はごしゃぐほどぬくいね。"
+    ]
+  },
+  {
+    standard: "ゴミを捨てておいて。",
+    correct: "ゴミを投げておいて。",
+    wrong: [
+      "ゴミをうるかしておいて。",
+      "ゴミを置いておいて。"
+    ]
+  },
+  {
+    standard: "この部屋は居心地が良いね。",
+    correct: "この部屋はあずましいね。",
+    wrong: [
+      "この部屋はちょすね。",
+      "この部屋はこわいね。"
+    ]
+  },
+  {
+    standard: "最近、とても疲れている。",
+    correct: "最近、なまらこわい。",
+    wrong: [
+      "最近、なまらはんかくさい。",
+      "最近、なまらじょっぴんかってる。"
+    ]
+  },
+  {
+    standard: "かさぶたをいじらないで。",
+    correct: "かさぶたをちょさないで。",
+    wrong: [
+      "かさぶたをうるかさないで。",
+      "かさぶたをかっちゃかないで。"
+    ]
+  },
+  {
+    standard: "どうして来なかったの？",
+    correct: "なして来なかったの？",
+    wrong: [
+      "したっけ来なかったの？",
+      "ばくって来なかったの？"
+    ]
+  },
+  {
+    standard: "この水はとても冷たい。",
+    correct: "この水はなまらしゃっこい。",
+    wrong: [
+      "この水はなまらあずましい。",
+      "この水はなまらわやだ。"
+    ]
+  },
+  {
+    standard: "そんなことをするなんてばかばかしい。",
+    correct: "そんなことをするなんてはんかくさい。",
+    wrong: [
+      "そんなことをするなんてこわい。",
+      "そんなことをするなんてしばれる。"
+    ]
+  },
+  {
+    standard: "早く座って。",
+    correct: "早くおっちゃんこして。",
+    wrong: [
+      "早くじょっぴんかって。",
+      "早くうるかして。"
+    ]
+  },
+  {
+    standard: "それは違うだろう。",
+    correct: "それは違うべや。",
+    wrong: [
+      "それは違うわや。",
+      "それは違うべし。"
+    ]
+  }
+];
+
+let order = [];
+let index = 0;
+let currentCorrect = "";
+
+const standardEl = document.getElementById("standard");
+const choicesEl = document.getElementById("choices");
+const answerEl = document.getElementById("answer");
+const resultEl = document.getElementById("result");
+const progressEl = document.getElementById("progress");
+const retryBtn = document.getElementById("retry");
+
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function start() {
+  order = shuffle([...problems]);
+  index = 0;
+  answerEl.disabled = false;
+  retryBtn.style.display = "none";
+  resultEl.textContent = "";
+  showProblem();
+}
+
+function showProblem() {
+  if (index >= order.length) {
+    standardEl.textContent = "終了！";
+    choicesEl.innerHTML = "";
+    progressEl.textContent = "";
+    resultEl.textContent = "全問終了！お疲れさまでした。";
+    answerEl.disabled = true;
+    retryBtn.style.display = "inline-block";
+    return;
+  }
+
+  const p = order[index];
+
+  progressEl.textContent =
+    `第 ${index + 1} 問 / 全 ${order.length} 問`;
+
+  standardEl.textContent = "【標準語】" + p.standard;
+
+  const choices = shuffle([p.correct, ...p.wrong]);
+  currentCorrect = p.correct;
+
+  choicesEl.innerHTML = "";
+  choices.forEach(c => {
+    const el = document.createElement("p");
+    el.textContent = c;
+    choicesEl.appendChild(el);
+  });
+
+  answerEl.value = "";
+  resultEl.textContent = "";
+  resultEl.className = "result";
+  answerEl.focus();
+}
+
+answerEl.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    if (answerEl.value === currentCorrect) {
+      resultEl.textContent = "正解！";
+      resultEl.classList.add("correct");
+      answerEl.disabled = true;
+
+      setTimeout(() => {
+        answerEl.disabled = false;
+        index++;
+        showProblem();
+      }, 800);
+
+    } else {
+      resultEl.textContent =
+        "違います。意味と方言の使い方をもう一度確認しよう。";
+    }
+  }
+});
+
+retryBtn.onclick = start;
+
+start();
+</script>
+</body>
+</html>
